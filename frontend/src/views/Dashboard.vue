@@ -47,7 +47,8 @@ let pollTimer = null
 
 // WebSocket 连接
 function connectWebSocket() {
-  const wsUrl = `ws://${window.location.host}/ws/metrics`
+  // 使用与 API 相同的地址
+  const wsUrl = `ws://172.21.144.1:8000/ws/metrics`
   // 尝试连接，使用轮询作为后备
   try {
     ws = new WebSocket(wsUrl)
