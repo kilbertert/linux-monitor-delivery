@@ -45,7 +45,8 @@ const props = defineProps({
   }
 })
 
-const info = ref({})
+// 使用传入的 data 或内部获取
+const info = ref(props.data || {})
 
 const uptime = computed(() => {
   if (!info.value.uptime) return '-'
@@ -66,8 +67,17 @@ async function fetchInfo() {
 }
 
 onMounted(() => {
-  fetchInfo()
+  // 如果没有传入数据，则主动获取
+  if (!info.value.hostname) {
+    fetchInfo()
+  }
 })
+
+function updateInfo(data) {
+  if (data) {
+    info.value = data
+  }
+}
 
 function updateInfo(data) {
   if (data) {

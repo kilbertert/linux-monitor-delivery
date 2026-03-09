@@ -50,15 +50,18 @@ let pollTimer = null
 
 // WebSocket 连接
 function connectWebSocket() {
-  // 使用与 API 相同的地址
   const wsUrl = `ws://172.21.144.1:8000/ws/metrics`
-  // 尝试连接，使用轮询作为后备
   try {
     ws = new WebSocket(wsUrl)
     
     ws.onopen = () => {
       console.log('WebSocket 已连接')
       connected.value = true
+      // 停止轮询
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+      }
       ws.send(JSON.stringify({ action: 'subscribe', metrics: ['cpu', 'memory', 'disk', 'network'], interval: 1 }))
     }
     
@@ -76,13 +79,14 @@ function connectWebSocket() {
     ws.onclose = () => {
       console.log('WebSocket 已断开')
       connected.value = false
-      // 5秒后重连
-      setTimeout(connectWebSocket, 5000)
+      // 启动轮询后备
+      startPolling()
     }
     
     ws.onerror = (error) => {
       console.error('WebSocket 错误:', error)
       connected.value = false
+      startPolling()
     }
   } catch (e) {
     console.error('WebSocket 连接失败:', e)
@@ -124,6 +128,9 @@ function updateData(data) {
 }
 
 onMounted(() => {
+  // 立即启动轮询获取初始数据
+  startPolling()
+  // 同时尝试 WebSocket
   connectWebSocket()
 })
 
