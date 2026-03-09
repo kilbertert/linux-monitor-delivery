@@ -226,3 +226,48 @@ if __name__ == "__main__":
     print("Disk:", json.dumps(get_disk(), indent=2))
     print("Network:", json.dumps(get_network(), indent=2))
     print("System Info:", json.dumps(get_system_info(), indent=2))
+
+
+def get_processes(top_n: int = 10) -> List[Dict[str, Any]]:
+    """
+    获取进程列表（按 CPU 占用排序）
+    返回: [{pid, name, cpu_percent, memory_percent, status}, ...]
+    """
+    processes = []
+    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent', 'status']):
+        try:
+            info = proc.info
+            if info['cpu_percent'] is None:
+                info['cpu_percent'] = 0
+            if info['memory_percent'] is None:
+                info['memory_percent'] = 0
+            processes.append(info)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    
+    # 按 CPU 占用排序
+    processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
+    return processes[:top_n]
+
+
+def get_top_processes_by_cpu(top_n: int = 10) -> List[Dict[str, Any]]:
+    """获取 CPU 占用最高的进程"""
+    return get_processes(top_n)
+
+
+def get_top_processes_by_memory(top_n: int = 10) -> List[Dict[str, Any]]:
+    """获取内存占用最高的进程"""
+    processes = []
+    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent', 'status']):
+        try:
+            info = proc.info
+            if info['cpu_percent'] is None:
+                info['cpu_percent'] = 0
+            if info['memory_percent'] is None:
+                info['memory_percent'] = 0
+            processes.append(info)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    
+    processes.sort(key=lambda x: x['memory_percent'], reverse=True)
+    return processes[:top_n]

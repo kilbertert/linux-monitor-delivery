@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from api import metrics_router, websocket_router, config_router
+from api import metrics_router, websocket_router, config_router, alerts_router, processes_router, export_router
 from db import init_db
 
 
@@ -55,6 +55,9 @@ app.add_middleware(
 app.include_router(metrics_router)
 app.include_router(websocket_router)
 app.include_router(config_router)
+app.include_router(alerts_router)
+app.include_router(processes_router)
+app.include_router(export_router)
 
 
 @app.get("/")
