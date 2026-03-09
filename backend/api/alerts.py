@@ -11,8 +11,8 @@ router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 
 @router.get("/rules")
-async def_rules():
-    """ get_alert获取所有告警规则"""
+async def get_rules():
+    """获取所有告警规则"""
     return {
         "rules": alert_manager.get_rules()
     }
