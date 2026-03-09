@@ -2,9 +2,12 @@
   <div class="dashboard">
     <header class="header">
       <h1>Linux 运行监控系统</h1>
-      <div class="status">
-        <span :class="['status-dot', connected ? 'online' : 'offline']"></span>
-        {{ connected ? '已连接' : '未连接' }}
+      <div class="header-actions">
+        <router-link to="/history" class="history-link">历史数据</router-link>
+        <div class="status">
+          <span :class="['status-dot', connected ? 'online' : 'offline']"></span>
+          {{ connected ? '已连接' : '未连接' }}
+        </div>
       </div>
     </header>
 
@@ -145,6 +148,22 @@ onUnmounted(() => {
   margin: 0;
   font-size: 20px;
   color: #333;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.history-link {
+  color: #409EFF;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.history-link:hover {
+  text-decoration: underline;
 }
 
 .status {

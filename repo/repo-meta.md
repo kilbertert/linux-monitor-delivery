@@ -3,7 +3,7 @@
 ## 项目信息
 
 - **项目名称**: linux-monitor
-- **仓库地址**: (待创建)
+- **仓库地址**: https://github.com/kilbertert/linux-monitor-delivery
 - **分支策略**: master (主分支)
 
 ## 交付版本

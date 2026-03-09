@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from api import metrics_router, websocket_router, metrics_publisher
 from db import init_db
 from monitor import collector
+from tasks import start_background_tasks, stop_background_tasks
 
 
 @asynccontextmanager
@@ -19,14 +20,15 @@ async def lifespan(app: FastAPI):
     print("初始化数据库...")
     init_db()
     
-    # 启动指标发布任务
-    print("启动指标发布任务...")
-    task = asyncio.create_task(metrics_publisher())
+    # 启动后台任务（数据采集存储 + 指标发布）
+    print("启动后台任务...")
+    start_background_tasks()
     
     yield
     
     # 关闭时
-    task.cancel()
+    print("关闭后台任务...")
+    stop_background_tasks()
     print("应用已关闭")
 
 
