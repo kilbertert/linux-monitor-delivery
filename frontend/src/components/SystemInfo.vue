@@ -79,12 +79,6 @@ function updateInfo(data) {
   }
 }
 
-function updateInfo(data) {
-  if (data) {
-    info.value = data
-  }
-}
-
 defineExpose({ updateInfo, fetchInfo })
 </script>
 
