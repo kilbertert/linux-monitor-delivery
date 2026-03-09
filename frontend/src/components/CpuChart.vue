@@ -77,11 +77,29 @@ const chartOption = ref({
 
 // 更新图表数据
 function updateChart(data) {
-  const timestamps = data.map(d => {
-    const date = new Date(d.timestamp)
-    return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-  })
-  const values = data.map(d => d.cpu_percent)
+  // 支持两种数据格式：
+  // 1. 历史数据: [{cpu: {percent: 10}, memory: {...}, ...}, ...]
+  // 2. 单条数据: {cpu: {percent: 10}, ...}
+  
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    return
+  }
+  
+  let timestamps = []
+  let values = []
+  
+  if (Array.isArray(data)) {
+    // 历史数据数组
+    timestamps = data.map(d => {
+      const date = new Date(d.timestamp || d.timestamp || Date.now())
+      return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+    })
+    values = data.map(d => d.cpu?.percent || d.cpu_percent || 0)
+  } else {
+    // 单条实时数据
+    timestamps = [new Date().toLocaleTimeString()]
+    values = [data.cpu?.percent || data.cpu_percent || 0]
+  }
 
   chartOption.value = {
     ...chartOption.value,

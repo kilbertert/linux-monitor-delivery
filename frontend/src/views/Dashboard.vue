@@ -132,6 +132,10 @@ onMounted(() => {
   startPolling()
   // 同时尝试 WebSocket
   connectWebSocket()
+  // 获取系统信息
+  if (systemInfoRef.value) {
+    systemInfoRef.value.fetchSystemInfo()
+  }
 })
 
 onUnmounted(() => {

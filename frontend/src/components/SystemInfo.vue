@@ -4,31 +4,31 @@
     <div class="info-grid">
       <div class="info-item">
         <span class="label">主机名</span>
-        <span class="value">{{ info.hostname || '-' }}</span>
+        <span class="value">{{ systemData.hostname || info.hostname || '-' }}</span>
       </div>
       <div class="info-item">
         <span class="label">平台</span>
-        <span class="value">{{ info.platform || '-' }}</span>
+        <span class="value">{{ systemData.platform || info.platform || '-' }}</span>
       </div>
       <div class="info-item">
         <span class="label">CPU 型号</span>
-        <span class="value">{{ info.model || '-' }}</span>
+        <span class="value">{{ systemData.model || info.model || '-' }}</span>
       </div>
       <div class="info-item">
         <span class="label">CPU 核心数</span>
-        <span class="value">{{ info.count || '-' }}</span>
+        <span class="value">{{ systemData.count || cpuCount || '-' }}</span>
       </div>
       <div class="info-item">
         <span class="label">内存总量</span>
-        <span class="value">{{ info.memory_total ? info.memory_total + ' GB' : '-' }}</span>
+        <span class="value">{{ systemData.memory_total ? systemData.memory_total + ' GB' : (info.memory_total ? info.memory_total + ' GB' : '-') }}</span>
       </div>
       <div class="info-item">
         <span class="label">磁盘总量</span>
-        <span class="value">{{ info.disk_total ? info.disk_total + ' GB' : '-' }}</span>
+        <span class="value">{{ systemData.disk_total ? systemData.disk_total + ' GB' : (info.disk_total ? info.disk_total + ' GB' : '-') }}</span>
       </div>
       <div class="info-item">
         <span class="label">运行时间</span>
-        <span class="value">{{ uptime }}</span>
+        <span class="value">{{ systemUptime }}</span>
       </div>
     </div>
   </div>
@@ -45,41 +45,58 @@ const props = defineProps({
   }
 })
 
-// 使用传入的 data 或内部获取
-const info = ref(props.data || {})
+const info = ref({})
+const systemData = ref({})
+const cpuCount = ref(0)
 
-const uptime = computed(() => {
-  if (!info.value.uptime) return '-'
+// 从实时数据中提取系统信息
+const systemInfoFromData = computed(() => {
+  if (props.data?.cpu?.count) {
+    return {
+      count: props.data.cpu.count
+    }
+  }
+  return {}
+})
+
+// 运行时间计算
+const systemUptime = computed(() => {
+  const uptime = systemData.value.uptime || info.value.uptime
+  if (!uptime) return '-'
   const now = Date.now() / 1000
-  const up = now - info.value.uptime
+  const up = now - uptime
+  if (up <= 0) return '-'
   const days = Math.floor(up / 86400)
   const hours = Math.floor((up % 86400) / 3600)
   const minutes = Math.floor((up % 3600) / 60)
   return `${days}天 ${hours}小时 ${minutes}分钟`
 })
 
-async function fetchInfo() {
+async function fetchSystemInfo() {
   try {
-    info.value = await getSystemInfo()
+    const data = await getSystemInfo()
+    systemData.value = data
+    cpuCount.value = data.count || 0
   } catch (e) {
     console.error('获取系统信息失败:', e)
   }
 }
 
-onMounted(() => {
-  // 如果没有传入数据，则主动获取
-  if (!info.value.hostname) {
-    fetchInfo()
-  }
-})
-
 function updateInfo(data) {
   if (data) {
     info.value = data
+    // 从实时数据中提取 CPU 核心数
+    if (data.cpu?.count) {
+      cpuCount.value = data.cpu.count
+    }
   }
 }
 
-defineExpose({ updateInfo, fetchInfo })
+onMounted(() => {
+  fetchSystemInfo()
+})
+
+defineExpose({ updateInfo, fetchSystemInfo })
 </script>
 
 <style scoped>
