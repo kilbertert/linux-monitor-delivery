@@ -1,2 +1,2 @@
-# kilbertert-linux-monitor-delivery
+# linux-monitor-delivery
 kilbertert/linux-monitor-delivery
