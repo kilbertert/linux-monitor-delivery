@@ -3,7 +3,10 @@
     <header class="header">
       <h1>Linux 运行监控系统</h1>
       <div class="header-actions">
-        <router-link to="/history" class="history-link">历史数据</router-link>
+        <router-link to="/history" class="nav-link">历史数据</router-link>
+        <router-link to="/processes" class="nav-link">进程监控</router-link>
+        <router-link to="/alerts" class="nav-link">告警管理</router-link>
+        <router-link to="/export" class="nav-link">数据导出</router-link>
         <div class="status">
           <span :class="['status-dot', connected ? 'online' : 'offline']"></span>
           {{ connected ? '已连接' : '未连接' }}
@@ -157,13 +160,14 @@ onUnmounted(() => {
   gap: 16px;
 }
 
-.history-link {
+.nav-link {
   color: #409EFF;
   text-decoration: none;
   font-size: 14px;
+  padding: 4px 8px;
 }
 
-.history-link:hover {
+.nav-link:hover {
   text-decoration: underline;
 }
 

@@ -28,6 +28,8 @@ apiClient.interceptors.response.use(
   }
 )
 
+// ============ 指标相关 ============
+
 // 获取当前指标
 export function getCurrentMetrics() {
   return apiClient.get('/metrics/current')
@@ -68,6 +70,57 @@ export function getSystemInfo() {
 // 健康检查
 export function healthCheck() {
   return apiClient.get('/health')
+}
+
+// ============ 配置相关 ============
+
+// 获取配置
+export function getConfig() {
+  return apiClient.get('/config')
+}
+
+// 更新配置
+export function updateConfig(config) {
+  return apiClient.post('/config', config)
+}
+
+// 重置配置
+export function resetConfig() {
+  return apiClient.post('/config/reset')
+}
+
+// ============ 告警相关 ============
+
+// 获取告警规则
+export function getAlertRules() {
+  return apiClient.get('/alerts/rules')
+}
+
+// 更新告警规则
+export function updateAlertRule(ruleName, update) {
+  return apiClient.post(`/alerts/rules/${ruleName}`, update)
+}
+
+// 切换告警规则
+export function toggleAlertRule(ruleName) {
+  return apiClient.post(`/alerts/rules/${ruleName}/toggle`)
+}
+
+// ============ 进程相关 ============
+
+// 获取进程列表
+export function getProcesses(top = 10, sort = 'cpu') {
+  return apiClient.get('/processes/', { params: { top, sort } })
+}
+
+// 获取 CPU 排行进程
+export function getTopCpuProcesses(top = 10) {
+  return apiClient.get('/processes/top/cpu', { params: { top } })
+}
+
+// 获取内存排行进程
+export function getTopMemoryProcesses(top = 10) {
+  return apiClient.get('/processes/top/memory', { params: { top } })
 }
 
 export default apiClient
