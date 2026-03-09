@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from contextlib import asynccontextmanager
 
-from api import metrics_router, websocket_router, metrics_publisher
+from api import metrics_router, websocket_router
 from db import init_db
 from monitor import collector
 from tasks import start_background_tasks, stop_background_tasks
