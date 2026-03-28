@@ -50,7 +50,10 @@ let pollTimer = null
 
 // WebSocket 连接
 function connectWebSocket() {
-  const wsUrl = `ws://172.21.144.1:8000/ws/metrics`
+  const host = window.location.hostname
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  const wsBase = import.meta.env.VITE_WS_BASE_URL || `${wsProtocol}://${host}:8000`
+  const wsUrl = `${wsBase}/ws/metrics`
   try {
     ws = new WebSocket(wsUrl)
     

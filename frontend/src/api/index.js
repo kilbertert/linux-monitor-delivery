@@ -3,7 +3,8 @@
  */
 import axios from 'axios'
 
-const API_BASE = 'http://172.21.144.1:8000'
+const runtimeHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `http://${runtimeHost}:8000`
 
 const apiClient = axios.create({
   baseURL: API_BASE,
