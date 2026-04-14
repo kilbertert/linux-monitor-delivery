@@ -97,6 +97,11 @@ export function getAlertRules() {
   return apiClient.get('/alerts/rules')
 }
 
+// 获取告警历史
+export function getAlertHistory(params = {}) {
+  return apiClient.get('/alerts/history', { params })
+}
+
 // 更新告警规则
 export function updateAlertRule(ruleName, update) {
   return apiClient.post(`/alerts/rules/${ruleName}`, update)

@@ -1,11 +1,12 @@
 """
 API 路由 - 告警管理
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 
 from alerts import alert_manager
+from db import get_alert_history
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -15,6 +16,28 @@ async def get_rules():
     """获取所有告警规则"""
     return {
         "rules": alert_manager.get_rules()
+    }
+
+
+@router.get("/history")
+async def get_alert_logs(
+    start_time: Optional[int] = Query(None, description="开始时间戳 (毫秒)"),
+    end_time: Optional[int] = Query(None, description="结束时间戳 (毫秒)"),
+    limit: int = Query(100, ge=1, le=1000, description="返回条数限制"),
+    metric: Optional[str] = Query(None, description="按指标筛选"),
+    rule_name: Optional[str] = Query(None, description="按规则名称筛选"),
+):
+    """获取告警历史记录"""
+    logs = get_alert_history(
+        start_time=start_time,
+        end_time=end_time,
+        limit=limit,
+        metric=metric,
+        rule_name=rule_name,
+    )
+    return {
+        "count": len(logs),
+        "data": logs,
     }
 
 

@@ -115,11 +115,17 @@ def get_network() -> Dict[str, Any]:
 
 def get_all_metrics() -> Dict[str, Any]:
     """获取所有监控指标"""
+    disk = get_disk()
+    disk.update(get_disk_rate())
+
+    network = get_network()
+    network.update(get_network_rate())
+
     return {
         "cpu": get_cpu(),
         "memory": get_memory(),
-        "disk": get_disk(),
-        "network": get_network(),
+        "disk": disk,
+        "network": network,
         "timestamp": int(time.time() * 1000)
     }
 

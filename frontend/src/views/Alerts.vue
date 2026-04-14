@@ -47,11 +47,33 @@
 
       <div class="alerts-log">
         <h3>告警记录</h3>
+        <div class="log-controls">
+          <div class="control-group">
+            <label>时间范围</label>
+            <select v-model="timeRange" @change="fetchAlertLogs">
+              <option value="1h">最近 1 小时</option>
+              <option value="6h">最近 6 小时</option>
+              <option value="24h">最近 24 小时</option>
+              <option value="7d">最近 7 天</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>显示条数</label>
+            <select v-model="historyLimit" @change="fetchAlertLogs">
+              <option :value="20">20 条</option>
+              <option :value="50">50 条</option>
+              <option :value="100">100 条</option>
+            </select>
+          </div>
+          <button @click="fetchAlertLogs" class="btn btn-log">查询</button>
+        </div>
         <div class="log-list">
           <div v-for="(alert, index) in alertLogs" :key="index" class="alert-item">
-            <span class="alert-time">{{ alert.timestamp }}</span>
+            <span class="alert-time">{{ formatTime(alert.timestamp) }}</span>
             <span class="alert-rule">{{ alert.rule }}</span>
-            <span class="alert-value">{{ alert.value?.toFixed(1) }} {{ alert.metric }}</span>
+            <span class="alert-value">
+              {{ alert.metric }} {{ alert.operator }} {{ alert.threshold }}，当前值 {{ formatNumber(alert.value) }}
+            </span>
           </div>
           <div v-if="alertLogs.length === 0" class="empty">暂无告警记录</div>
         </div>
@@ -62,11 +84,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { getAlertRules, toggleAlertRule } from '../api'
+import { getAlertHistory, getAlertRules, toggleAlertRule } from '../api'
 
 const rules = ref([])
 const alertLogs = ref([])
-let ws = null
+const timeRange = ref('24h')
+const historyLimit = ref(50)
+let refreshTimer = null
 
 const enabledCount = computed(() => rules.value.filter(r => r.enabled).length)
 
@@ -82,37 +106,55 @@ async function fetchRules() {
 async function toggleRule(ruleName) {
   try {
     await toggleAlertRule(ruleName)
+    await fetchRules()
   } catch (e) {
     console.error('切换规则失败:', e)
     fetchRules()
   }
 }
 
-function connectWebSocket() {
-  const wsUrl = `ws://172.21.144.1:8000/ws/metrics`
-  try {
-    ws = new WebSocket(wsUrl)
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        // 处理告警数据（需要后端推送）
-      } catch (e) {
-        console.error('解析失败:', e)
-      }
-    }
-  } catch (e) {
-    console.error('WebSocket 连接失败:', e)
+function getStartTime() {
+  const now = Date.now()
+  const ranges = {
+    '1h': now - 3600 * 1000,
+    '6h': now - 6 * 3600 * 1000,
+    '24h': now - 24 * 3600 * 1000,
+    '7d': now - 7 * 24 * 3600 * 1000
   }
+  return ranges[timeRange.value]
+}
+
+async function fetchAlertLogs() {
+  try {
+    const result = await getAlertHistory({
+      start_time: getStartTime(),
+      end_time: Date.now(),
+      limit: historyLimit.value
+    })
+    alertLogs.value = result.data || []
+  } catch (e) {
+    console.error('获取告警记录失败:', e)
+  }
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return '-'
+  return new Date(timestamp).toLocaleString('zh-CN')
+}
+
+function formatNumber(value) {
+  if (value == null) return '-'
+  return Number(value).toFixed(2)
 }
 
 onMounted(() => {
   fetchRules()
-  // connectWebSocket()
+  fetchAlertLogs()
+  refreshTimer = setInterval(fetchAlertLogs, 5000)
 })
 
 onUnmounted(() => {
-  if (ws) ws.close()
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 </script>
 
@@ -248,6 +290,35 @@ onUnmounted(() => {
 
 .alerts-log h3 {
   margin: 0 0 16px 0;
+}
+
+.log-controls {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-group label {
+  font-size: 14px;
+  color: #666;
+}
+
+.control-group select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn-log {
+  margin-left: 0;
 }
 
 .log-list {

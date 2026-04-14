@@ -73,12 +73,27 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    # 告警记录表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS alert_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp INTEGER NOT NULL,
+            rule_name TEXT NOT NULL,
+            metric TEXT NOT NULL,
+            value REAL NOT NULL,
+            threshold REAL NOT NULL,
+            operator TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     
     # 创建索引
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_cpu_timestamp ON cpu_stat(timestamp)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON memory_stat(timestamp)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_net_timestamp ON net_stat(timestamp)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_disk_timestamp ON disk_stat(timestamp)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_alert_timestamp ON alert_log(timestamp)")
     
     conn.commit()
     conn.close()
@@ -174,6 +189,108 @@ def get_history_metrics(
         results.append(result)
     
     return results
+
+
+def save_alert(alert: Dict[str, Any]):
+    """保存单条告警记录"""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            INSERT INTO alert_log (timestamp, rule_name, metric, value, threshold, operator)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                alert["timestamp"],
+                alert["rule"],
+                alert["metric"],
+                alert["value"],
+                alert["threshold"],
+                alert["operator"],
+            )
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"保存告警失败: {e}")
+    finally:
+        conn.close()
+
+
+def save_alerts(alerts: List[Dict[str, Any]]):
+    """批量保存告警记录"""
+    if not alerts:
+        return
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.executemany(
+            """
+            INSERT INTO alert_log (timestamp, rule_name, metric, value, threshold, operator)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    alert["timestamp"],
+                    alert["rule"],
+                    alert["metric"],
+                    alert["value"],
+                    alert["threshold"],
+                    alert["operator"],
+                )
+                for alert in alerts
+            ]
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"批量保存告警失败: {e}")
+    finally:
+        conn.close()
+
+
+def get_alert_history(
+    start_time: Optional[int] = None,
+    end_time: Optional[int] = None,
+    limit: int = 100,
+    metric: Optional[str] = None,
+    rule_name: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """查询告警历史记录"""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    conditions = []
+    params: List[Any] = []
+
+    if start_time is not None:
+        conditions.append("timestamp >= ?")
+        params.append(start_time)
+    if end_time is not None:
+        conditions.append("timestamp <= ?")
+        params.append(end_time)
+    if metric:
+        conditions.append("metric = ?")
+        params.append(metric)
+    if rule_name:
+        conditions.append("rule_name = ?")
+        params.append(rule_name)
+
+    query = "SELECT * FROM alert_log"
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    query += " ORDER BY timestamp DESC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
 
 
 if __name__ == "__main__":

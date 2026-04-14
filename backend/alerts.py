@@ -1,6 +1,7 @@
 """
 告警管理模块
 """
+import time
 from typing import Dict, List, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -59,7 +60,8 @@ class AlertManager:
                     "value": value,
                     "threshold": rule.threshold,
                     "operator": rule.operator,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": int(time.time() * 1000),
+                    "time_text": datetime.now().isoformat(timespec="seconds")
                 }
                 alerts.append(alert)
                 
