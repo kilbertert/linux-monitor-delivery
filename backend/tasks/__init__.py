@@ -3,6 +3,8 @@
 定时采集并存储监控数据
 """
 import asyncio
+import os
+import platform
 from datetime import datetime
 
 # 采集间隔（秒）
@@ -15,6 +17,16 @@ _publish_task = None
 
 def get_collector():
     """延迟导入避免循环依赖"""
+    # WSL + Windows Agent 模式：优先使用 wsl_windows_client
+    import os
+    is_wsl = "microsoft" in platform.release().lower() if hasattr(platform, "release") else False
+    use_agent = os.environ.get("USE_WINDOWS_AGENT", "true").lower() == "true"
+
+    if is_wsl and use_agent:
+        from monitor import wsl_windows_client as collector
+        print(f"[Collector] WSL + Agent 模式: {collector.WINDOWS_AGENT_HOST}")
+        return collector
+
     from monitor import collector
     return collector
 

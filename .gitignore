@@ -61,3 +61,4 @@ dist/
 build/
 *.tsbuildinfo
 docs/images/
+backend/windows_agent.py

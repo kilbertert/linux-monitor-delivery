@@ -119,8 +119,9 @@ async function fetchPreview() {
 async function doExport() {
   const endTime = Date.now()
   const startTime = getTimeRange()
-  
-  const url = `http://172.21.144.1:8000/export/csv?metric_type=${metricType.value}&start_time=${startTime}&end_time=${endTime}&limit=${limit.value}`
+
+  const apiHost = window.location.origin.replace(/:\d+$/, ':8000')
+  const url = `${apiHost}/export/csv?metric_type=${metricType.value}&start_time=${startTime}&end_time=${endTime}&limit=${limit.value}`
   
   // 创建下载链接
   const link = document.createElement('a')
